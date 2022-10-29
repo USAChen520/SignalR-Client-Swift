@@ -10,7 +10,6 @@ Pod::Spec.new do |s|
   s.swift_version          = "5.0"
   s.ios.deployment_target  = "9.0"
   s.osx.deployment_target  = "10.13"
-  s.tvos.deployment_target = "9.0"
 #  Enable once https://github.com/CocoaPods/CocoaPods/issues/11558 is fixed
 #  s.watchos.deployment_target = "6.0"
   s.source_files           = "Sources/SignalRClient/*.swift"

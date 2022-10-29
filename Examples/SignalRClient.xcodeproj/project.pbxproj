@@ -75,7 +75,6 @@
 		7391A94822510170007BEF23 /* HubProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7391A91A22510170007BEF23 /* HubProtocol.swift */; };
 		7391A94922510170007BEF23 /* HubProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7391A91A22510170007BEF23 /* HubProtocol.swift */; };
 		7391A94A22510170007BEF23 /* Util.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7391A91B22510170007BEF23 /* Util.swift */; };
-		7391A94B22510170007BEF23 /* Util.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7391A91B22510170007BEF23 /* Util.swift */; };
 		7391A94E22510170007BEF23 /* JSONHubProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7391A91D22510170007BEF23 /* JSONHubProtocol.swift */; };
 		7391A94F22510170007BEF23 /* JSONHubProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7391A91D22510170007BEF23 /* JSONHubProtocol.swift */; };
 		7391A95022510170007BEF23 /* HttpConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7391A91E22510170007BEF23 /* HttpConnection.swift */; };
@@ -629,7 +628,6 @@
 				7391A92F22510170007BEF23 /* ServerInvocationHandler.swift in Sources */,
 				7391A94322510170007BEF23 /* HttpClientProtocol.swift in Sources */,
 				7391A93122510170007BEF23 /* DefaultHttpClient.swift in Sources */,
-				7391A94B22510170007BEF23 /* Util.swift in Sources */,
 				7391A93F22510170007BEF23 /* HandshakeProtocol.swift in Sources */,
 				5ABD6A632439AE6B00BFA93D /* ReconnectableConnection.swift in Sources */,
 				7391A94722510170007BEF23 /* TransferFormat.swift in Sources */,
