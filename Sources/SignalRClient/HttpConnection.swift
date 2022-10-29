@@ -72,7 +72,8 @@ public class HttpConnection: Connection {
             transport = try! self.transportFactory.createTransport(availableTransports: [TransportDescription(transportType: TransportType.webSockets, transferFormats: [TransferFormat.text, TransferFormat.binary])])
             startTransport(connectionId: nil)
         } else {
-            negotiate(negotiateUrl: createNegotiateUrl(), accessToken: nil) { negotiationResponse in
+            negotiate(negotiateUrl: createNegotiateUrl(), accessToken: nil) {[weak self] negotiationResponse in
+                guard let self = self else { return }
                 do {
                     self.transport = try self.transportFactory.createTransport(availableTransports: negotiationResponse.availableTransports)
                 } catch {
@@ -93,7 +94,8 @@ public class HttpConnection: Connection {
         }
 
         let httpClient = options.httpClientFactory(options)
-        httpClient.post(url: negotiateUrl, body: nil) {httpResponse, error in
+        httpClient.post(url: negotiateUrl, body: nil) {[weak self] httpResponse, error in
+            guard let self = self else { return }
             if let e = error {
                 self.logger.log(logLevel: .error, message: "Negotiate failed due to: \(e))")
                 self.failOpenWithError(error: e, changeState: true)

@@ -184,7 +184,7 @@ public class HubConnectionBuilder {
             let httpConnectionOptionsCopy = HttpConnectionOptions()
             httpConnectionOptionsCopy.headers = httpConnectionOptions.headers
             httpConnectionOptionsCopy.accessTokenProvider = httpConnectionOptions.accessTokenProvider
-            httpConnectionOptionsCopy.httpClientFactory = httpConnectionOptions.httpClientFactory
+//            httpConnectionOptionsCopy.httpClientFactory = httpConnectionOptions.httpClientFactory
             if #available(OSX 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *) {
                 httpConnectionOptionsCopy.skipNegotiation = httpConnectionOptions.skipNegotiation
             }

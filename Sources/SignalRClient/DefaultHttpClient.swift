@@ -9,7 +9,13 @@
 import Foundation
 
 class DefaultHttpClient: HttpClientProtocol {
-    private let options: HttpConnectionOptions
+    
+    deinit {
+        self.session.finishTasksAndInvalidate()
+        print("释放")
+    }
+    
+    private var options: HttpConnectionOptions
     private let session: URLSession
 
     public init(options: HttpConnectionOptions) {
@@ -44,8 +50,7 @@ class DefaultHttpClient: HttpClientProtocol {
         populateHeaders(headers: options.headers, request: &urlRequest)
         setAccessToken(accessTokenProvider: options.accessTokenProvider, request: &urlRequest)
         
-        session.dataTask(with: urlRequest, completionHandler: { (data, response, error) in
-
+        session.dataTask(with: urlRequest, completionHandler: {(data, response, error) in
             var resp:HttpResponse?
             if error == nil {
                 resp = HttpResponse(statusCode: (response as! HTTPURLResponse).statusCode, contents: data)
