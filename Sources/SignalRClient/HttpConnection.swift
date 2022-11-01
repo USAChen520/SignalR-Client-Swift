@@ -53,6 +53,9 @@ public class HttpConnection: Connection {
     }
 
     deinit {
+        if self.transport != nil {
+            self.transport?.delegate = nil
+        }
         logger.log(logLevel: .debug, message: "HttpConnection deinit")
     }
 
