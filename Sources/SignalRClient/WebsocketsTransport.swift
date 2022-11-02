@@ -23,11 +23,19 @@ public class WebsocketsTransport: NSObject, Transport, URLSessionWebSocketDelega
     init(logger: Logger) {
         self.logger = logger
     }
+    deinit {
+        self.delegate = nil
+        self.close()
+        print("销毁 WebsocketsTransport")
+    }
 
     public func start(url: URL, options: HttpConnectionOptions) {
         logger.log(logLevel: .info, message: "Starting WebSocket transport")
 
-        var request = URLRequest(url: convertUrl(url: url))
+        guard let url = convertUrl(url: url) else {
+            delegate?.transportDidClose(nil)
+            return }
+        var request = URLRequest(url: url)
         populateHeaders(headers: options.headers, request: &request)
         setAccessToken(accessTokenProvider: options.accessTokenProvider, request: &request)
         urlSession = URLSession(configuration: .default, delegate: self, delegateQueue: OperationQueue())
@@ -42,8 +50,15 @@ public class WebsocketsTransport: NSObject, Transport, URLSessionWebSocketDelega
     }
 
     public func close() {
-        webSocketTask?.cancel(with: .normalClosure, reason: nil)
-        urlSession?.finishTasksAndInvalidate()
+        if webSocketTask != nil {
+            webSocketTask!.cancel(with: .normalClosure, reason: nil)
+            webSocketTask = nil
+        }
+        if urlSession != nil {
+            urlSession!.invalidateAndCancel()
+            urlSession!.finishTasksAndInvalidate()
+            urlSession = nil
+        }
     }
 
     public func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didOpenWithProtocol protocol: String?) {
@@ -53,7 +68,8 @@ public class WebsocketsTransport: NSObject, Transport, URLSessionWebSocketDelega
     }
 
     private func readMessage()  {
-        webSocketTask?.receive { result in
+        webSocketTask?.receive {[weak self] result in
+            guard let self = self else { return }
             switch result {
             case .failure(let error):
                 // This failure always occurs when the task is cancelled. If the code
@@ -144,7 +160,8 @@ public class WebsocketsTransport: NSObject, Transport, URLSessionWebSocketDelega
         urlSession?.finishTasksAndInvalidate()
     }
 
-    private func convertUrl(url: URL) -> URL {
+    private func convertUrl(url: URL?) -> URL? {
+        guard let url = url else { return nil }
         if var components = URLComponents(url: url, resolvingAgainstBaseURL: false) {
             if (components.scheme == "http") {
                 components.scheme = "ws"

@@ -62,7 +62,8 @@ public class LongPollingTransport: Transport {
                 closeCalled = true
                 active = false
                 self.logger.log(logLevel: .debug, message: "Sending LongPolling session DELETE request...")
-                self.httpClient?.delete(url: self.url!, completionHandler: { (_, errorOptional) in
+                self.httpClient?.delete(url: self.url!, completionHandler: {[weak self] (_, errorOptional) in
+                    guard let self = self else { return }
                     if let error = errorOptional {
                         self.logger.log(logLevel: .error, message: "Error while DELETE-ing long polling session: \(error)")
                         self.delegate?.transportDidClose(error)

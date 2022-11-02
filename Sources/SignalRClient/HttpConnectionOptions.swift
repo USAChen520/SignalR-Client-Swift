@@ -60,6 +60,7 @@ public class HttpConnectionOptions {
      Initializes an `HttpConnectionOptions`.
      */
     public init() {
+        print("创建")
     }
     deinit {
         print("释放2")
