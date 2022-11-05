@@ -19,7 +19,7 @@ public class HttpConnection: Connection {
 
     private var transportDelegate: TransportDelegate?
 
-    private var state: State
+    private(set) var state: State
     private var transport: Transport?
     private var stopError: Error?
 
@@ -29,7 +29,7 @@ public class HttpConnection: Connection {
         return transport?.inherentKeepAlive ?? true
     }
 
-    private enum State: String {
+    enum State: String {
         case initial = "initial"
         case connecting = "connecting"
         case connected = "connected"
@@ -54,6 +54,7 @@ public class HttpConnection: Connection {
 
     deinit {
         if self.transport != nil {
+            self.transport?.close()
             self.transport?.delegate = nil
         }
         logger.log(logLevel: .debug, message: "HttpConnection deinit")

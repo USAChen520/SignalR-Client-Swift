@@ -50,14 +50,13 @@ public class WebsocketsTransport: NSObject, Transport, URLSessionWebSocketDelega
     }
 
     public func close() {
+        if urlSession != nil {
+            urlSession!.finishTasksAndInvalidate()
+            urlSession = nil
+        }
         if webSocketTask != nil {
             webSocketTask!.cancel(with: .normalClosure, reason: nil)
             webSocketTask = nil
-        }
-        if urlSession != nil {
-            urlSession!.invalidateAndCancel()
-            urlSession!.finishTasksAndInvalidate()
-            urlSession = nil
         }
     }
 
@@ -156,8 +155,8 @@ public class WebsocketsTransport: NSObject, Transport, URLSessionWebSocketDelega
     }
 
     private func shutdownTransport() {
-        webSocketTask?.cancel(with: .normalClosure, reason: nil)
         urlSession?.finishTasksAndInvalidate()
+        webSocketTask?.cancel(with: .normalClosure, reason: nil)
     }
 
     private func convertUrl(url: URL?) -> URL? {

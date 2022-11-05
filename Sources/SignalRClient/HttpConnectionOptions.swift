@@ -63,6 +63,6 @@ public class HttpConnectionOptions {
         print("创建")
     }
     deinit {
-        print("释放2")
+        print("释放2 HttpConnectionOptions")
     }
 }
