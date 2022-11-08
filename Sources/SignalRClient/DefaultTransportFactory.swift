@@ -57,10 +57,7 @@ internal class DefaultTransportFactory: TransportFactory {
                 return WebsocketsTransport(logger: logger)
             }
         }
-        if type == .longPolling {
-            logger.log(logLevel: .info, message: "Selected LongPolling transport")
-            return LongPollingTransport(logger: logger)
-        }
-        return nil
+        logger.log(logLevel: .info, message: "Selected LongPolling transport")
+        return LongPollingTransport(logger: logger)
     }
 }
