@@ -69,6 +69,7 @@ public class HubConnection {
     }
 
     deinit {
+        self.cleanUpKeepAlive()
         logger.log(logLevel: .debug, message: "HubConnection deinit")
     }
 
@@ -107,6 +108,7 @@ public class HubConnection {
     public func stop() {
         logger.log(logLevel: .info, message: "Stopping hub connection")
         connection.stop(stopError: nil)
+        cleanUpKeepAlive()
     }
 
     /**
@@ -363,7 +365,6 @@ public class HubConnection {
             data = remainingData
             let originalHandshakeStatus = handshakeStatus
             handshakeStatus = .handled
-            keepAlivePingTask = DispatchWorkItem{}
             if let e = error {
                 // TODO: (BUG) if this fails when reconnecting the callback should not be called and there
                 // will be no further reconnect attempts
@@ -513,27 +514,30 @@ public class HubConnection {
         }
 
         hubConnectionQueue.sync {
-            guard keepAlivePingTask != nil else {
-                logger.log(logLevel: .debug, message: "Connection stopped - ignore keep alive reset")
-                return
+            
+            if keepAlivePingTask != nil {
+                keepAlivePingTask!.cancel()
             }
+            
             logger.log(logLevel: .debug, message: "Resetting keep alive")
-            keepAlivePingTask!.cancel()
             keepAlivePingTask = DispatchWorkItem { self.sendKeepAlivePing() }
+            
             hubConnectionQueue.asyncAfter(deadline: DispatchTime.now() + keepAliveInterval, execute: keepAlivePingTask!)
+            
         }
     }
 
     private func sendKeepAlivePing() {
         logger.log(logLevel: .debug, message: "Send keep alive called")
+        cleanUpKeepAlive()
         guard handshakeStatus.isHandled else {
             logger.log(logLevel: .debug, message: "Send keep alive called but not connected")
-            cleanUpKeepAlive()
             return
         }
 
         do {
             let cachedPingMessage = try hubProtocol.writeMessage(message: PingMessage.instance)
+
             logger.log(logLevel: .debug, message: "Sending keep alive")
             connection.send(data: cachedPingMessage, sendDidComplete: {[weak self] error in
                 guard let self = self else { return }

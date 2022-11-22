@@ -65,7 +65,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
                 httpConnectionOptions.accessTokenProvider = {
                     return "11111"
                 }
-            })
+            }).withLogging(minLogLevel: .debug)
             .build()
 
         self.chatHubConnection!.on(method: "NewMessage", callback: {[weak self](user: String, message: String) in
