@@ -61,6 +61,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         
         self.chatHubConnection = HubConnectionBuilder(url: URL(string: self.serverUrl)!)
             .withHubConnectionDelegate(delegate: self.chatHubConnectionDelegate!)
+            .withPermittedTransportTypes(.webSockets)
             .withHttpConnectionOptions(configureHttpOptions: { httpConnectionOptions in
                 httpConnectionOptions.accessTokenProvider = {
                     return "11111"
