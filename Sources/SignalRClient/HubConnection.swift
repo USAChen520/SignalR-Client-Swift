@@ -521,18 +521,11 @@ public class HubConnection {
             logger.log(logLevel: .debug, message: "Not scheduling sending keep alive - keep alive disabled")
             return
         }
-
+        self.cleanUpKeepAlive()
         hubConnectionQueue.sync {
-            
-            if keepAlivePingTask != nil {
-                keepAlivePingTask!.cancel()
-            }
-            
             logger.log(logLevel: .debug, message: "Resetting keep alive")
             keepAlivePingTask = DispatchWorkItem { self.sendKeepAlivePing() }
-            
             hubConnectionQueue.asyncAfter(deadline: DispatchTime.now() + keepAliveInterval, execute: keepAlivePingTask!)
-            
         }
     }
 
