@@ -40,13 +40,14 @@ public class WebsocketsTransport: NSObject, Transport, URLSessionWebSocketDelega
         setAccessToken(accessTokenProvider: options.accessTokenProvider, request: &request)
         urlSession = URLSession(configuration: .default, delegate: self, delegateQueue: OperationQueue())
         webSocketTask = urlSession!.webSocketTask(with: request)
-        
         webSocketTask!.resume()
     }
 
     public func send(data: Data, sendDidComplete: @escaping (Error?) -> Void) {
-        let message = URLSessionWebSocketTask.Message.data(data)
-        webSocketTask?.send(message, completionHandler: sendDidComplete)
+        if let webSocketTask = webSocketTask {
+            let message = URLSessionWebSocketTask.Message.data(data)
+            webSocketTask.send(message, completionHandler: sendDidComplete)
+        }
     }
 
     public func close() {

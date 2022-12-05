@@ -32,6 +32,7 @@ public class HubConnection {
 
     private let callbackQueue: DispatchQueue
 
+    private var isStop: Bool = true
     /**
     Allows setting a delegate that will be notified about connection lifecycle events
 
@@ -79,6 +80,7 @@ public class HubConnection {
      - note: Use `HubConnectionDelegate` to receive connection lifecycle notifications.
     */
     public func start() {
+        self.isStop = false
         self.connectionDelegate = HubConnectionConnectionDelegate(hubConnection: self)
         self.connection.delegate = connectionDelegate
         logger.log(logLevel: .info, message: "Starting hub connection")
@@ -106,6 +108,7 @@ public class HubConnection {
      Stops the connection.
     */
     public func stop() {
+        isStop = true
         logger.log(logLevel: .info, message: "Stopping hub connection")
         connection.stop(stopError: nil)
         cleanUpKeepAlive()
@@ -503,6 +506,12 @@ public class HubConnection {
     }
 
     private func resetKeepAlive() {
+        if isStop {
+            return
+        }
+        if connection == nil {
+            return
+        }
         if connection.inherentKeepAlive {
             logger.log(logLevel: .debug, message: "Not scheduling sending keep alive - inherent keep alive")
             return
@@ -534,10 +543,7 @@ public class HubConnection {
             logger.log(logLevel: .debug, message: "Send keep alive called but not connected")
             return
         }
-
-        do {
-            let cachedPingMessage = try hubProtocol.writeMessage(message: PingMessage.instance)
-
+        if let cachedPingMessage = try? hubProtocol.writeMessage(message: PingMessage.instance) {
             logger.log(logLevel: .debug, message: "Sending keep alive")
             connection.send(data: cachedPingMessage, sendDidComplete: {[weak self] error in
                 guard let self = self else { return }
@@ -548,11 +554,8 @@ public class HubConnection {
                 }
                 self.resetKeepAlive()
             })
-        } catch {
-            // We don't care about the error. It should be seen elsewhere in the client.
-            // The connection is probably in a bad or closed state now, cancel the timer but not set the task to nil to allow to continue to trigger in case this
-            logger.log(logLevel: .error, message: "Couldn't write keep alive message \(error.localizedDescription)")
-            keepAlivePingTask?.cancel()
+        } else {
+            self.cleanUpKeepAlive()
         }
     }
 

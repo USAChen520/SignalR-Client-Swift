@@ -73,7 +73,7 @@ public class HttpConnection: Connection {
         startDispatchGroup.enter()
 
         if options.skipNegotiation {
-            transport = try! self.transportFactory.createTransport(availableTransports: [TransportDescription(transportType: TransportType.webSockets, transferFormats: [TransferFormat.text, TransferFormat.binary])])
+            transport = try? self.transportFactory.createTransport(availableTransports: [TransportDescription(transportType: TransportType.webSockets, transferFormats: [TransferFormat.text, TransferFormat.binary])])
             startTransport(connectionId: nil)
         } else {
             negotiate(negotiateUrl: createNegotiateUrl(), accessToken: nil) {[weak self] negotiationResponse in
@@ -150,11 +150,14 @@ public class HttpConnection: Connection {
             self.failOpenWithError(error: SignalRError.connectionIsBeingClosed, changeState: false)
             return
         }
-
-        let startUrl = self.createStartUrl(connectionId: connectionId)
-        self.transportDelegate = ConnectionTransportDelegate(connection: self, connectionId: connectionId)
-        self.transport!.delegate = self.transportDelegate
-        self.transport!.start(url: startUrl, options: self.options)
+        if transport != nil {
+            let startUrl = self.createStartUrl(connectionId: connectionId)
+            self.transportDelegate = ConnectionTransportDelegate(connection: self, connectionId: connectionId)
+            self.transport!.delegate = self.transportDelegate
+            self.transport!.start(url: startUrl, options: self.options)
+        } else {
+            self.failOpenWithError(error: SignalRError.connectionIsBeingClosed, changeState: false)
+        }        
     }
 
     private func createNegotiateUrl() -> URL {
@@ -205,7 +208,13 @@ public class HttpConnection: Connection {
             }
             return
         }
-        transport!.send(data: data, sendDidComplete: sendDidComplete)
+        if transport != nil {
+            transport!.send(data: data, sendDidComplete: sendDidComplete)
+        } else {
+            options.callbackQueue.async {
+                sendDidComplete(SignalRError.connectionIsBeingClosed)
+            }
+        }
     }
 
     public func stop(stopError: Error? = nil) {

@@ -121,6 +121,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         if let alert = reconnectAlert {
             alert.dismiss(animated: true, completion: nil)
         }
+        self.didAction()
         blockUI(message: "Connection is closed.", error: error)
     }
 
