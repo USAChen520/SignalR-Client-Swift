@@ -210,6 +210,7 @@
 		7391A91F22510170007BEF23 /* ConnectionDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConnectionDelegate.swift; sourceTree = "<group>"; };
 		7391A92022510170007BEF23 /* HubConnectionBuilder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HubConnectionBuilder.swift; sourceTree = "<group>"; };
 		7391A92122510170007BEF23 /* SignalRError.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SignalRError.swift; sourceTree = "<group>"; };
+		B4D17D05293F72F30048BB06 /* SwiftSignalRClient_w.podspec */ = {isa = PBXFileReference; lastKnownFileType = text; name = SwiftSignalRClient_w.podspec; path = ../SwiftSignalRClient_w.podspec; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -264,6 +265,7 @@
 		5A9803481E5FE60E00BFFB0A = {
 			isa = PBXGroup;
 			children = (
+				B4D17D05293F72F30048BB06 /* SwiftSignalRClient_w.podspec */,
 				5A17165922ED7FBE00ABB7FA /* Playground */,
 				7391A90522510170007BEF23 /* Sources */,
 				5A9803541E5FE60E00BFFB0A /* SignalRClient */,

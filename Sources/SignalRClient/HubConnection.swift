@@ -32,7 +32,6 @@ public class HubConnection {
 
     private let callbackQueue: DispatchQueue
 
-    private var isStop: Bool = true
     /**
     Allows setting a delegate that will be notified about connection lifecycle events
 
@@ -80,7 +79,6 @@ public class HubConnection {
      - note: Use `HubConnectionDelegate` to receive connection lifecycle notifications.
     */
     public func start() {
-        self.isStop = false
         self.connectionDelegate = HubConnectionConnectionDelegate(hubConnection: self)
         self.connection.delegate = connectionDelegate
         logger.log(logLevel: .info, message: "Starting hub connection")
@@ -108,7 +106,6 @@ public class HubConnection {
      Stops the connection.
     */
     public func stop() {
-        isStop = true
         logger.log(logLevel: .info, message: "Stopping hub connection")
         connection.stop(stopError: nil)
         cleanUpKeepAlive()
@@ -506,27 +503,33 @@ public class HubConnection {
     }
 
     private func resetKeepAlive() {
-        if isStop {
+        
+        if connection.inherentKeepAlive {
+            logger.log(logLevel: .debug, message: "Not scheduling sending keep alive - inherent keep alive")
             return
         }
-        if connection == nil {
+        self.cleanUpKeepAlive()
+        keepAlivePingTask = DispatchWorkItem { self.sendKeepAlivePing() }
+        hubConnectionQueue.asyncAfter(deadline: DispatchTime.now(), execute: keepAlivePingTask!)
+        
+    }
+    
+    private func loopAlivePing() {
+        guard let keepAliveInterval = keepAliveIntervalInSeconds else {
+            logger.log(logLevel: .debug, message: "Not scheduling sending keep alive - keep alive disabled")
             return
         }
         if connection.inherentKeepAlive {
             logger.log(logLevel: .debug, message: "Not scheduling sending keep alive - inherent keep alive")
             return
         }
-
-        guard let keepAliveInterval = keepAliveIntervalInSeconds else {
-            logger.log(logLevel: .debug, message: "Not scheduling sending keep alive - keep alive disabled")
-            return
+        
+        if self.keepAlivePingTask != nil {
+            self.keepAlivePingTask?.cancel()
         }
-        self.cleanUpKeepAlive()
-        hubConnectionQueue.sync {
-            logger.log(logLevel: .debug, message: "Resetting keep alive")
-            keepAlivePingTask = DispatchWorkItem { self.sendKeepAlivePing() }
-            hubConnectionQueue.asyncAfter(deadline: DispatchTime.now() + keepAliveInterval, execute: keepAlivePingTask!)
-        }
+        logger.log(logLevel: .debug, message: "Resetting keep alive")
+        keepAlivePingTask = DispatchWorkItem { self.sendKeepAlivePing() }
+        hubConnectionQueue.asyncAfter(deadline: DispatchTime.now() + keepAliveInterval, execute: keepAlivePingTask!)
     }
 
     private func sendKeepAlivePing() {
@@ -545,7 +548,7 @@ public class HubConnection {
                 } else {
                     self.logger.log(logLevel: .debug, message: "Keep alive sent successfully")
                 }
-                self.resetKeepAlive()
+                self.loopAlivePing()
             })
         } else {
             self.cleanUpKeepAlive()
