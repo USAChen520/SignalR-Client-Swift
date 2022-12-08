@@ -66,6 +66,16 @@ internal class ReconnectableConnection: Connection {
         }
         underlyingConnection.send(data: data, sendDidComplete: sendDidComplete)
     }
+    
+    func sendPing(data: Data, sendDidComplete: @escaping (Error?) -> Void) {
+        guard state != .reconnecting else {
+            // TODO: consider buffering
+            sendDidComplete(SignalRError.connectionIsReconnecting)
+            return
+        }
+        underlyingConnection.send(data: data, sendDidComplete: sendDidComplete)
+    }
+    
 
     func stop(stopError: Error?) {
         logger.log(logLevel: .info, message: "Received connection stop request")

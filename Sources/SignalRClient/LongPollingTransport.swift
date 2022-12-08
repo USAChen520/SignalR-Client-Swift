@@ -55,6 +55,23 @@ public class LongPollingTransport: Transport {
             }
         }
     }
+    public func sendPing(data: Data, sendDidComplete: @escaping (Error?) -> Void) {
+        guard active, let httpClient = httpClient, let url = url else {
+            sendDidComplete(SignalRError.invalidState)
+            return
+        }
+        httpClient.post(url: url, body: data) { (responseOptional, errorOptional) in
+            if let error = errorOptional {
+                sendDidComplete(error)
+            } else if let response = responseOptional {
+                if response.statusCode == 200 {
+                    sendDidComplete(nil)
+                } else {
+                    sendDidComplete(SignalRError.webError(statusCode: response.statusCode))
+                }
+            }
+        }
+    }
     
     public func close() {
         closeQueue.sync {

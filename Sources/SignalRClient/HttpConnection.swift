@@ -216,6 +216,26 @@ public class HttpConnection: Connection {
             }
         }
     }
+    
+    public func sendPing(data: Data, sendDidComplete: @escaping (Error?) -> Void) {
+        guard state == .connected else {
+            logger.log(logLevel: .error, message: "Sending data failed - connection not in the 'connected' state")
+
+            // Never synchronously respond to avoid upstream deadlocks based on async assumptions
+            options.callbackQueue.async {
+                sendDidComplete(SignalRError.invalidState)
+            }
+            return
+        }
+        
+        if transport != nil {
+            transport!.sendPing(data: data, sendDidComplete: sendDidComplete)
+        } else {
+            options.callbackQueue.async {
+                sendDidComplete(SignalRError.connectionIsBeingClosed)
+            }
+        }
+    }
 
     public func stop(stopError: Error? = nil) {
         logger.log(logLevel: .info, message: "Stopping connection")

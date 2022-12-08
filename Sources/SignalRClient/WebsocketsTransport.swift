@@ -49,6 +49,16 @@ public class WebsocketsTransport: NSObject, Transport, URLSessionWebSocketDelega
             webSocketTask.send(message, completionHandler: sendDidComplete)
         }
     }
+    public func sendPing(data: Data, sendDidComplete: @escaping (Error?) -> Void) {
+        if let webSocketTask = webSocketTask {
+            webSocketTask.sendPing { error in
+                sendDidComplete(error)
+            }
+        }
+    }
+//    public func sendPing(sendDidComplete: @escaping (Error?) -> Void) {
+//
+//    }
 
     public func close() {
         if urlSession != nil {
