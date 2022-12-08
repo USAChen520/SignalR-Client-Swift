@@ -37,7 +37,9 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     @objc
     func didAction() {
         messages.removeAll()
-        self.reConnect()
+        if self.chatHubConnection != nil {
+            self.chatHubConnection?.stop()
+        }
     }
 
     override func viewDidAppear(_ animated: Bool) {
@@ -54,10 +56,6 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     
     public func reConnect() {
         self.name = "John Doe"
-
-        if self.chatHubConnection != nil {
-            self.chatHubConnection?.stop()
-        }
         
         self.chatHubConnection = HubConnectionBuilder(url: URL(string: self.serverUrl)!)
             .withHubConnectionDelegate(delegate: self.chatHubConnectionDelegate!)
@@ -122,7 +120,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         if let alert = reconnectAlert {
             alert.dismiss(animated: true, completion: nil)
         }
-        self.didAction()
+        reConnect()
         blockUI(message: "Connection is closed.", error: error)
     }
 

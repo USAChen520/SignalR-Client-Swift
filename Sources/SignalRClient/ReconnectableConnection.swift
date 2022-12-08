@@ -14,7 +14,10 @@ internal class ReconnectableConnection: Connection {
     private let reconnectPolicy: ReconnectPolicy
     private let logger: Logger
 
-    private var underlyingConnection: Connection
+    private lazy var underlyingConnection: Connection = {
+        let s = self.connectionFactory()
+        return s
+    }()
     private var wrappedDelegate: ConnectionDelegate?
     private var state = State.disconnected
     private var failedAttemptsCount: Int = 0
@@ -41,7 +44,7 @@ internal class ReconnectableConnection: Connection {
         self.connectionFactory = connectionFactory
         self.reconnectPolicy = reconnectPolicy
         self.logger = logger
-        self.underlyingConnection = connectionFactory()
+//        self.underlyingConnection = connectionFactory()
     }
 
     func start() {

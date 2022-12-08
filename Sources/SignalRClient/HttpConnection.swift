@@ -10,7 +10,7 @@ import Foundation
 
 public class HttpConnection: Connection {
     private let connectionQueue: DispatchQueue
-    private let startDispatchGroup: DispatchGroup
+//    private let startDispatchGroup: DispatchGroup
 
     private var url: URL
     private let options: HttpConnectionOptions
@@ -43,7 +43,7 @@ public class HttpConnection: Connection {
     init(url: URL, options: HttpConnectionOptions, transportFactory: TransportFactory, logger: Logger) {
         logger.log(logLevel: .debug, message: "HttpConnection init")
         connectionQueue = DispatchQueue(label: "SignalR.connection.queue")
-        startDispatchGroup = DispatchGroup()
+//        startDispatchGroup = DispatchGroup()
 
         self.url = url
         self.options = options
@@ -70,7 +70,7 @@ public class HttpConnection: Connection {
             return
         }
 
-        startDispatchGroup.enter()
+//        startDispatchGroup.enter()
 
         if options.skipNegotiation {
             transport = try? self.transportFactory.createTransport(availableTransports: [TransportDescription(transportType: TransportType.webSockets, transferFormats: [TransferFormat.text, TransferFormat.binary])])
@@ -188,7 +188,7 @@ public class HttpConnection: Connection {
 
         if leaveStartDispatchGroup {
             logger.log(logLevel: .debug, message: "Leaving startDispatchGroup (\(#function): \(#line))")
-            startDispatchGroup.leave()
+//            startDispatchGroup.leave()
         }
 
         logger.log(logLevel: .debug, message: "Invoking connectionDidFailToOpen")
@@ -231,7 +231,7 @@ public class HttpConnection: Connection {
             return
         }
 
-        self.startDispatchGroup.wait()
+//        self.startDispatchGroup.wait()
         
         // The transport can be nil if connection was stopped immediately after starting
         // or failed to start. In this case we need to call connectionDidClose ourselves.
@@ -253,7 +253,7 @@ public class HttpConnection: Connection {
         let previousState = changeState(from: .connecting, to: .connected)
 
         logger.log(logLevel: .debug, message: "Leaving startDispatchGroup (\(#function): \(#line))")
-        startDispatchGroup.leave()
+//        startDispatchGroup.leave()
         if  previousState != nil {
             logger.log(logLevel: .debug, message: "Invoking connectionDidOpen")
             self.connectionId = connectionId
@@ -281,7 +281,7 @@ public class HttpConnection: Connection {
         if previousState == .connecting {
             logger.log(logLevel: .debug, message: "Leaving startDispatchGroup (\(#function): \(#line))")
             // unblock the dispatch group if transport closed when starting (likely due to an error)
-            startDispatchGroup.leave()
+//            startDispatchGroup.leave()
 
             logger.log(logLevel: .debug, message: "Invoking connectionDidFailToOpen")
             options.callbackQueue.async {
