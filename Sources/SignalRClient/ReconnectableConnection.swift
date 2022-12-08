@@ -22,7 +22,6 @@ internal class ReconnectableConnection: Connection {
     private var state = State.disconnected
     private var failedAttemptsCount: Int = 0
     private var reconnectStartTime: Date = Date()
-
     private enum State: String {
         case disconnected = "disconnected"
         case starting = "starting"
@@ -73,7 +72,7 @@ internal class ReconnectableConnection: Connection {
             sendDidComplete(SignalRError.connectionIsReconnecting)
             return
         }
-        underlyingConnection.send(data: data, sendDidComplete: sendDidComplete)
+        underlyingConnection.sendPing(data: data, sendDidComplete: sendDidComplete)
     }
     
 

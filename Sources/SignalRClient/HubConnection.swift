@@ -46,7 +46,6 @@ public class HubConnection {
     public var connectionId: String? {
         return connection.connectionId
     }
-
     /**
      Initializes a `HubConnection` with an underlying connection, a hub protocol and an optional logger.
 
@@ -540,10 +539,9 @@ public class HubConnection {
             return
         }
         
-//
         if let cachedPingMessage = try? hubProtocol.writeMessage(message: PingMessage.instance) {
             logger.log(logLevel: .debug, message: "Sending keep alive")
-            connection.send(data: cachedPingMessage) {[weak self] error in
+            connection.send(data: cachedPingMessage, sendDidComplete: {[weak self] error in
                 guard let self = self else { return }
                 if let error = error {
                     self.logger.log(logLevel: .error, message: "Keep alive send error:  \(error.localizedDescription)")
@@ -551,16 +549,7 @@ public class HubConnection {
                     self.logger.log(logLevel: .debug, message: "Keep alive sent successfully")
                 }
                 self.loopAlivePing()
-            }
-//            connection.send(data: cachedPingMessage, sendDidComplete: {[weak self] error in
-//                guard let self = self else { return }
-//                if let error = error {
-//                    self.logger.log(logLevel: .error, message: "Keep alive send error:  \(error.localizedDescription)")
-//                } else {
-//                    self.logger.log(logLevel: .debug, message: "Keep alive sent successfully")
-//                }
-//                self.loopAlivePing()
-//            })
+            })
         } else {
             self.cleanUpKeepAlive()
         }
