@@ -502,15 +502,14 @@ public class HubConnection {
     }
 
     private func resetKeepAlive() {
-        
-        if connection.inherentKeepAlive {
-            logger.log(logLevel: .debug, message: "Not scheduling sending keep alive - inherent keep alive")
+
+        if self.connection.inherentKeepAlive {
+            self.logger.log(logLevel: .debug, message: "Not scheduling sending keep alive - inherent keep alive")
             return
         }
-        self.cleanUpKeepAlive()
-        keepAlivePingTask = DispatchWorkItem { self.sendKeepAlivePing() }
-        hubConnectionQueue.asyncAfter(deadline: DispatchTime.now(), execute: keepAlivePingTask!)
-        
+        self.hubConnectionQueue.async {
+            self.loopAlivePing()
+        }
     }
     
     private func loopAlivePing() {
@@ -524,16 +523,19 @@ public class HubConnection {
         }
         
         if self.keepAlivePingTask != nil {
-            self.keepAlivePingTask?.cancel()
+            self.keepAlivePingTask!.cancel()
         }
         logger.log(logLevel: .debug, message: "Resetting keep alive")
-        keepAlivePingTask = DispatchWorkItem { self.sendKeepAlivePing() }
+        keepAlivePingTask = DispatchWorkItem {[weak self] in
+            guard let self = self else { return }
+            self.sendKeepAlivePing()
+        }
         hubConnectionQueue.asyncAfter(deadline: DispatchTime.now() + keepAliveInterval, execute: keepAlivePingTask!)
     }
 
     private func sendKeepAlivePing() {
+        self.cleanUpKeepAlive()
         logger.log(logLevel: .debug, message: "Send keep alive called")
-        cleanUpKeepAlive()
         guard handshakeStatus.isHandled else {
             logger.log(logLevel: .debug, message: "Send keep alive called but not connected")
             return
@@ -548,10 +550,10 @@ public class HubConnection {
                 } else {
                     self.logger.log(logLevel: .debug, message: "Keep alive sent successfully")
                 }
-                self.loopAlivePing()
+                self.hubConnectionQueue.async {
+                    self.loopAlivePing()
+                }
             })
-        } else {
-            self.cleanUpKeepAlive()
         }
     }
 
