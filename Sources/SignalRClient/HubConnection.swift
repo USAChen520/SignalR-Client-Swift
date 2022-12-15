@@ -46,7 +46,6 @@ public class HubConnection {
     public var connectionId: String? {
         return connection.connectionId
     }
-
     /**
      Initializes a `HubConnection` with an underlying connection, a hub protocol and an optional logger.
 
@@ -69,6 +68,7 @@ public class HubConnection {
     }
 
     deinit {
+        self.cleanUpKeepAlive()
         logger.log(logLevel: .debug, message: "HubConnection deinit")
     }
 
@@ -90,7 +90,8 @@ public class HubConnection {
         // TODO: add negative test (e.g. invalid protocol)
         let handshakeRequest = HandshakeProtocol.createHandshakeRequest(hubProtocol: hubProtocol)
         logger.log(logLevel: .debug, message: "Sending handshake request: \(handshakeRequest)")
-        connection.send(data: "\(handshakeRequest)".data(using: .utf8)!) { error in
+        connection.send(data: "\(handshakeRequest)".data(using: .utf8)!) {[weak self] error in
+            guard let self = self else { return }
             if let e = error {
                 self.logger.log(logLevel: .error, message: "Sending handshake request failed: \(e)")
                 // TODO: (BUG) if this fails when reconnecting the callback should not be called and there
@@ -106,6 +107,7 @@ public class HubConnection {
     public func stop() {
         logger.log(logLevel: .info, message: "Stopping hub connection")
         connection.stop(stopError: nil)
+        cleanUpKeepAlive()
     }
 
     /**
@@ -156,7 +158,8 @@ public class HubConnection {
             let invocationData = try hubProtocol.writeMessage(message: invocationMessage)
             resetKeepAlive()
 
-            connection.send(data: invocationData, sendDidComplete: { error in
+            connection.send(data: invocationData, sendDidComplete: {[weak self] error in
+                guard let self = self else { return }
                 if error == nil {
                     self.resetKeepAlive()
                 }
@@ -281,7 +284,8 @@ public class HubConnection {
         let cancelInvocationMessage = CancelInvocationMessage(invocationId: streamHandle.invocationId)
         do {
             let cancelInvocationData = try hubProtocol.writeMessage(message: cancelInvocationMessage)
-            connection.send(data: cancelInvocationData, sendDidComplete: {error in
+            connection.send(data: cancelInvocationData, sendDidComplete: {[weak self] error in
+                guard let self = self else { return }
                 if let e = error {
                     self.logger.log(logLevel: .error, message: "Sending cancellation of server side streaming hub returned error: \(e)")
                     self.callbackQueue.async {
@@ -312,7 +316,8 @@ public class HubConnection {
             let invocationMessage = invocationHandler.createInvocationMessage(invocationId: id, method: method, arguments: arguments, streamIds: [])
             let invocationData = try hubProtocol.writeMessage(message: invocationMessage)
 
-            connection.send(data: invocationData) { error in
+            connection.send(data: invocationData) {[weak self] error in
+                guard let self = self else { return }
                 if let e = error {
                     self.logger.log(logLevel: .error, message: "Invoking server hub method \(method) returned error: \(e)")
                     self.failInvocationWithError(invocationHandler: invocationHandler, invocationId: id, error: e)
@@ -359,7 +364,6 @@ public class HubConnection {
             data = remainingData
             let originalHandshakeStatus = handshakeStatus
             handshakeStatus = .handled
-            keepAlivePingTask = DispatchWorkItem{}
             if let e = error {
                 // TODO: (BUG) if this fails when reconnecting the callback should not be called and there
                 // will be no further reconnect attempts
@@ -498,52 +502,58 @@ public class HubConnection {
     }
 
     private func resetKeepAlive() {
-        if connection.inherentKeepAlive {
-            logger.log(logLevel: .debug, message: "Not scheduling sending keep alive - inherent keep alive")
+
+        if self.connection.inherentKeepAlive {
+            self.logger.log(logLevel: .debug, message: "Not scheduling sending keep alive - inherent keep alive")
             return
         }
-
+        self.hubConnectionQueue.async {
+            self.loopAlivePing()
+        }
+    }
+    
+    private func loopAlivePing() {
         guard let keepAliveInterval = keepAliveIntervalInSeconds else {
             logger.log(logLevel: .debug, message: "Not scheduling sending keep alive - keep alive disabled")
             return
         }
-
-        hubConnectionQueue.sync {
-            guard keepAlivePingTask != nil else {
-                logger.log(logLevel: .debug, message: "Connection stopped - ignore keep alive reset")
-                return
-            }
-            logger.log(logLevel: .debug, message: "Resetting keep alive")
-            keepAlivePingTask!.cancel()
-            keepAlivePingTask = DispatchWorkItem { self.sendKeepAlivePing() }
-            hubConnectionQueue.asyncAfter(deadline: DispatchTime.now() + keepAliveInterval, execute: keepAlivePingTask!)
+        if connection.inherentKeepAlive {
+            logger.log(logLevel: .debug, message: "Not scheduling sending keep alive - inherent keep alive")
+            return
         }
+        
+        if self.keepAlivePingTask != nil {
+            self.keepAlivePingTask!.cancel()
+        }
+        logger.log(logLevel: .debug, message: "Resetting keep alive")
+        keepAlivePingTask = DispatchWorkItem {[weak self] in
+            guard let self = self else { return }
+            self.sendKeepAlivePing()
+        }
+        hubConnectionQueue.asyncAfter(deadline: DispatchTime.now() + keepAliveInterval, execute: keepAlivePingTask!)
     }
 
     private func sendKeepAlivePing() {
+        self.cleanUpKeepAlive()
         logger.log(logLevel: .debug, message: "Send keep alive called")
         guard handshakeStatus.isHandled else {
             logger.log(logLevel: .debug, message: "Send keep alive called but not connected")
-            cleanUpKeepAlive()
             return
         }
-
-        do {
-            let cachedPingMessage = try hubProtocol.writeMessage(message: PingMessage.instance)
+        
+        if let cachedPingMessage = try? hubProtocol.writeMessage(message: PingMessage.instance) {
             logger.log(logLevel: .debug, message: "Sending keep alive")
-            connection.send(data: cachedPingMessage, sendDidComplete: { error in
+            connection.send(data: cachedPingMessage, sendDidComplete: {[weak self] error in
+                guard let self = self else { return }
                 if let error = error {
                     self.logger.log(logLevel: .error, message: "Keep alive send error:  \(error.localizedDescription)")
                 } else {
                     self.logger.log(logLevel: .debug, message: "Keep alive sent successfully")
                 }
-                self.resetKeepAlive()
+                self.hubConnectionQueue.async {
+                    self.loopAlivePing()
+                }
             })
-        } catch {
-            // We don't care about the error. It should be seen elsewhere in the client.
-            // The connection is probably in a bad or closed state now, cancel the timer but not set the task to nil to allow to continue to trigger in case this
-            logger.log(logLevel: .error, message: "Couldn't write keep alive message \(error.localizedDescription)")
-            keepAlivePingTask?.cancel()
         }
     }
 

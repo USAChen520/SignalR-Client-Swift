@@ -28,7 +28,8 @@ public class HttpConnectionOptions {
     /**
      A factory for creating an HTTP client.
     */
-    public var httpClientFactory: (_ options: HttpConnectionOptions) -> HttpClientProtocol = { DefaultHttpClient(options: $0) }
+    public func httpClientFactory(_ options: HttpConnectionOptions) -> HttpClientProtocol { DefaultHttpClient(options: options)
+    }
 
     /**
      Whether to skip the negotiation request when starting a connection.
@@ -59,5 +60,9 @@ public class HttpConnectionOptions {
      Initializes an `HttpConnectionOptions`.
      */
     public init() {
+        print("创建")
+    }
+    deinit {
+        print("释放2 HttpConnectionOptions")
     }
 }

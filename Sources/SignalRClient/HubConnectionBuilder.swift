@@ -171,6 +171,10 @@ public class HubConnectionBuilder {
             return createReconnectableHttpConnection(transportFactory: transportFactory)
         }
     }
+    deinit {
+        print("HubConnectionBuilder 释放")
+        
+    }
     
     private func createReconnectableHttpConnection(transportFactory: TransportFactory) -> ReconnectableConnection {
         // Avoid capturing reference to this builder instance in the factory closure.
@@ -178,13 +182,13 @@ public class HubConnectionBuilder {
         let httpConnectionOptions = self.httpConnectionOptions
         let logger = self.logger
         let connectionFactory: () -> HttpConnection = {
+          
             // HttpConnection may overwrite some properties (most notably accessTokenProvider
             // when connecting to Azure SingalR Service) so needs its own copy to not corrupt
             // the instance provided by the user
             let httpConnectionOptionsCopy = HttpConnectionOptions()
             httpConnectionOptionsCopy.headers = httpConnectionOptions.headers
             httpConnectionOptionsCopy.accessTokenProvider = httpConnectionOptions.accessTokenProvider
-            httpConnectionOptionsCopy.httpClientFactory = httpConnectionOptions.httpClientFactory
             if #available(OSX 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *) {
                 httpConnectionOptionsCopy.skipNegotiation = httpConnectionOptions.skipNegotiation
             }

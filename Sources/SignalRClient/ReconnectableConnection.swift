@@ -14,12 +14,14 @@ internal class ReconnectableConnection: Connection {
     private let reconnectPolicy: ReconnectPolicy
     private let logger: Logger
 
-    private var underlyingConnection: Connection
+    private lazy var underlyingConnection: Connection = {
+        let s = self.connectionFactory()
+        return s
+    }()
     private var wrappedDelegate: ConnectionDelegate?
     private var state = State.disconnected
     private var failedAttemptsCount: Int = 0
     private var reconnectStartTime: Date = Date()
-
     private enum State: String {
         case disconnected = "disconnected"
         case starting = "starting"
@@ -41,7 +43,7 @@ internal class ReconnectableConnection: Connection {
         self.connectionFactory = connectionFactory
         self.reconnectPolicy = reconnectPolicy
         self.logger = logger
-        self.underlyingConnection = connectionFactory()
+//        self.underlyingConnection = connectionFactory()
     }
 
     func start() {
@@ -63,6 +65,16 @@ internal class ReconnectableConnection: Connection {
         }
         underlyingConnection.send(data: data, sendDidComplete: sendDidComplete)
     }
+    
+    func sendPing(data: Data, sendDidComplete: @escaping (Error?) -> Void) {
+        guard state != .reconnecting else {
+            // TODO: consider buffering
+            sendDidComplete(SignalRError.connectionIsReconnecting)
+            return
+        }
+        underlyingConnection.sendPing(data: data, sendDidComplete: sendDidComplete)
+    }
+    
 
     func stop(stopError: Error?) {
         logger.log(logLevel: .info, message: "Received connection stop request")

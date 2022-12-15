@@ -14,6 +14,7 @@ public protocol Transport: AnyObject {
     func start(url:URL, options: HttpConnectionOptions) -> Void
     func send(data: Data, sendDidComplete: @escaping (_ error:Error?) -> Void)
     func close() -> Void
+    func sendPing(data: Data, sendDidComplete: @escaping (Error?) -> Void)
 }
 
 internal protocol TransportFactory {

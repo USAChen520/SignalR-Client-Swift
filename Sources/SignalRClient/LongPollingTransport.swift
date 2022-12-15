@@ -55,6 +55,23 @@ public class LongPollingTransport: Transport {
             }
         }
     }
+    public func sendPing(data: Data, sendDidComplete: @escaping (Error?) -> Void) {
+        guard active, let httpClient = httpClient, let url = url else {
+            sendDidComplete(SignalRError.invalidState)
+            return
+        }
+        httpClient.post(url: url, body: data) { (responseOptional, errorOptional) in
+            if let error = errorOptional {
+                sendDidComplete(error)
+            } else if let response = responseOptional {
+                if response.statusCode == 200 {
+                    sendDidComplete(nil)
+                } else {
+                    sendDidComplete(SignalRError.webError(statusCode: response.statusCode))
+                }
+            }
+        }
+    }
     
     public func close() {
         closeQueue.sync {
@@ -62,7 +79,8 @@ public class LongPollingTransport: Transport {
                 closeCalled = true
                 active = false
                 self.logger.log(logLevel: .debug, message: "Sending LongPolling session DELETE request...")
-                self.httpClient?.delete(url: self.url!, completionHandler: { (_, errorOptional) in
+                self.httpClient?.delete(url: self.url!, completionHandler: {[weak self] (_, errorOptional) in
+                    guard let self = self else { return }
                     if let error = errorOptional {
                         self.logger.log(logLevel: .error, message: "Error while DELETE-ing long polling session: \(error)")
                         self.delegate?.transportDidClose(error)

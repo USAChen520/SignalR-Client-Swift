@@ -15,4 +15,6 @@ public protocol Connection {
     func start() -> Void
     func send(data: Data, sendDidComplete: @escaping (_ error: Error?) -> Void) -> Void
     func stop(stopError: Error?) -> Void
+    // socket ping
+    func sendPing(data: Data, sendDidComplete: @escaping (Error?) -> Void)
 }
