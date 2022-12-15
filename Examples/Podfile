@@ -1,0 +1,42 @@
+# Uncomment the next line to define a global platform for your project
+# platform :ios, '9.0'
+
+target 'ConnectionSample' do
+  # Comment the next line if you don't want to use dynamic frameworks
+  use_frameworks!
+
+  # Pods for ConnectionSample
+pod 'SocketRocket'
+end
+
+target 'HubSample' do
+  # Comment the next line if you don't want to use dynamic frameworks
+  use_frameworks!
+
+  # Pods for HubSample
+pod 'SocketRocket'
+end
+
+target 'HubSamplePhone' do
+  # Comment the next line if you don't want to use dynamic frameworks
+  use_frameworks!
+
+  # Pods for HubSamplePhone
+pod 'SocketRocket'
+end
+
+target 'iOS SignalRClient' do
+  # Comment the next line if you don't want to use dynamic frameworks
+  use_frameworks!
+
+  # Pods for iOS SignalRClient
+pod 'SocketRocket'
+end
+
+target 'macOS SignalRClient' do
+  # Comment the next line if you don't want to use dynamic frameworks
+  use_frameworks!
+
+  # Pods for macOS SignalRClient
+pod 'SocketRocket'
+end
