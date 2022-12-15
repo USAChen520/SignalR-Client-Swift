@@ -15,4 +15,8 @@ Pod::Spec.new do |s|
 #  s.watchos.deployment_target = "6.0"
   s.source_files           = "Sources/SignalRClient/*.swift"
   s.requires_arc           = true
+  
+  s.subspec "Core" do |ss|
+    ss.dependency "SocketRocket"
+  end
 end

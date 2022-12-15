@@ -543,7 +543,10 @@ public class HubConnection {
         
         if let cachedPingMessage = try? hubProtocol.writeMessage(message: PingMessage.instance) {
             logger.log(logLevel: .debug, message: "Sending keep alive")
-            connection.send(data: cachedPingMessage, sendDidComplete: {[weak self] error in
+            connection.sendPing(data: cachedPingMessage) { [weak self] error  in
+//
+//            }
+//            connection.send(data: cachedPingMessage, sendDidComplete: {[weak self] error in
                 guard let self = self else { return }
                 if let error = error {
                     self.logger.log(logLevel: .error, message: "Keep alive send error:  \(error.localizedDescription)")
@@ -553,7 +556,7 @@ public class HubConnection {
                 self.hubConnectionQueue.async {
                     self.loopAlivePing()
                 }
-            })
+            }
         }
     }
 

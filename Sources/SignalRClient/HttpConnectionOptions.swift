@@ -38,16 +38,14 @@ public class HttpConnectionOptions {
     */
     public var skipNegotiation: Bool {
         get { return skipNegotiationValue }
-        
-        @available(OSX 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *)
         set { skipNegotiationValue = newValue }
     }
     private var skipNegotiationValue = false
-
+    
     /**
     The timeout value for individual requests, in seconds.
      */
-    public var requestTimeout: TimeInterval = 120
+    public var requestTimeout: TimeInterval = 60
     
     public var authenticationChallengeHandler: ((_ session: URLSession, _ challenge: URLAuthenticationChallenge, _ completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) -> Void)?
 

@@ -62,6 +62,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
             .withHubConnectionDelegate(delegate: self.chatHubConnectionDelegate!)
             .withPermittedTransportTypes(.webSockets)
             .withHttpConnectionOptions(configureHttpOptions: { httpConnectionOptions in
+                httpConnectionOptions.skipNegotiation = true
                 httpConnectionOptions.accessTokenProvider = {
                     return "eyJhbGciOiJSUzI1NiIsImtpZCI6Ijk2YjM1ZDJiMjM0NjhhMjhhY2NkNTY0Yzg0ZDgyMmI1IiwidHlwIjoiSldUIn0.eyJuYmYiOjE2NzA0ODc4NTMsImV4cCI6MTY3MTA5MjY1MywiaXNzIjoiaHR0cDovL3EtemQtaWRlbnRpdHlzZXJ2ZXIuemRjaGF0cm9vbSIsImF1ZCI6WyJodHRwOi8vcS16ZC1pZGVudGl0eXNlcnZlci56ZGNoYXRyb29tL3Jlc291cmNlcyIsImFncCJdLCJjbGllbnRfaWQiOiJaZC5BR2FtZVBsYXRmb3JtLkFwaSIsInN1YiI6ImlvczEyMCIsImF1dGhfdGltZSI6MTY3MDQ4Nzg1MywiaWRwIjoibG9jYWwiLCJNZXJjaGFudElkIjoiOSIsIlNpZ25OYW1lIjoiaW9zMTIwIiwic2NvcGUiOlsiYWdwIiwib2ZmbGluZV9hY2Nlc3MiXSwiYW1yIjpbInBhc3N3b3JkIl19.e242alJ-eXvDP3XkswTx8S1Zj_QCh1EsIUMAMTMbeiBOvhUQMIXYeOF1K2AnbKArGw9A-U02vNmc9wfhOCUCg00rnit8nLYSCv4J3l7z84r8p4t0LBwwB5A4VKXiGO1KQPECqeevDV43ue0t6VGVpu89HqFL9wS4U_kygQkhvzms2feAJkjRxCxluNHaxFBGf0hzU3llsAttebB2G4h7_CdmqYLDz7S3bfHRnU5M2UrNtLIR4FRhljvtTMtmawlhyNfrfJ1Z2P-flxls9pjb8yOB82PF6ssy09jnjDw0sjgKxZ2dFPq-K4sOMrAH18Z9I8MyEhgGe0pRfajXr4fqyg"
                 }
